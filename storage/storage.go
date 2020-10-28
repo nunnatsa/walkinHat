@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/nunnatsa/walkinHat/hat"
+	"github.com/nunnatsa/walkingHat/hat"
 )
 
 var upgrader = websocket.Upgrader{

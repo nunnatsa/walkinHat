@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/nunnatsa/walkinHat/hat"
-	"github.com/nunnatsa/walkinHat/storage"
+	"github.com/nunnatsa/walkingHat/hat"
+	"github.com/nunnatsa/walkingHat/storage"
 	"os"
 
 	"html/template"
