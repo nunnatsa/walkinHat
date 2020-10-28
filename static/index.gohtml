@@ -2,33 +2,66 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Color</title>
+    <title>The Walking Pixel</title>
     <style>
-        div {
-            padding: 5em;
+        table, td, th {
+            border: 1px solid black;
+        }
+
+        table {
+            border-collapse: collapse;
+        }
+
+        td {
+            width: 20px;
+            height: 20px;
         }
     </style>
 </head>
 <body>
     
-<div id="color-div"></div>
-<p id="clr"></p>
-<p id="loc"></p>
+<table id="matrix">
+    <tr>
+        <td id="00"/><td id="01"/><td id="02"/><td id="03"/><td id="04"/><td id="05"/><td id="06"/><td id="07"/>
+    </tr>
+    <tr>
+        <td id="10"/><td id="11"/><td id="12"/><td id="13"/><td id="14"/><td id="15"/><td id="16"/><td id="17"/>
+    </tr>
+    <tr>
+        <td id="20"/><td id="21"/><td id="22"/><td id="23"/><td id="24"/><td id="25"/><td id="26"/><td id="27"/>
+    </tr>
+    <tr>
+        <td id="30"/><td id="31"/><td id="32"/><td id="33"/><td id="34"/><td id="35"/><td id="36"/><td id="37"/>
+    </tr>
+    <tr>
+        <td id="40"/><td id="41"/><td id="42"/><td id="43"/><td id="44"/><td id="45"/><td id="46"/><td id="47"/>
+    </tr>
+    <tr>
+        <td id="50"/><td id="51"/><td id="52"/><td id="53"/><td id="54"/><td id="55"/><td id="56"/><td id="57"/>
+    </tr>
+    <tr>
+        <td id="60"/><td id="61"/><td id="62"/><td id="63"/><td id="64"/><td id="65"/><td id="66"/><td id="67"/>
+    </tr>
+    <tr>
+        <td id="70"/><td id="71"/><td id="72"/><td id="73"/><td id="74"/><td id="75"/><td id="76"/><td id="77"/>
+    </tr>
+</table>
 <script type="text/javascript">
-    const div = document.getElementById("color-div");
-    const clr = document.getElementById("clr")
-    const loc = document.getElementById("loc")
-    const socket = new WebSocket("ws://{{.}}:8080/color");
+    const socket = new WebSocket("ws://{{.}}:8080/pixel");
 
-    socket.onopen = function () {
-        msg.innerHTML += "Status: Connected\n";
-    };
+    let elm
 
     socket.onmessage = function (e) {
-        let data = JSON.parse(e.data)
-        div.style = "background: " + data.color
-        clr.innerHTML = "Color: " + data.color + "\n";
-        loc.innerHTML = "Location: " + data.location + "\n";
+        const data = JSON.parse(e.data)
+        console.log(`Received new pixel: ${e.data}`)
+
+        if (elm !== undefined) {
+            elm.style.background = "white"
+        }
+
+        let id = `${data.y}${data.x}`
+        elm = document.getElementById(id)
+        elm.style.background = data.color
     };
 </script>
 </body>

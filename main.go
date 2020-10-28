@@ -19,7 +19,7 @@ func main() {
 		http.ServeFile(w, r, "static/index.html")
 	})
 
-	http.Handle("/color", st)
+	http.Handle("/pixel", st)
 
 	if err := http.ListenAndServe(":8080", nil); err != nil {
 		log.Panic(err)

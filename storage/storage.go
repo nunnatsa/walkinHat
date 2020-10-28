@@ -32,13 +32,13 @@ var idp = &IDProvider{lock: &sync.Mutex{}}
 
 // Storage stores a Pixel. It updates it from an incoming channel, and distributes the change to its listeners.
 type Storage struct {
-	data     *hat.Pixel
-	clients  map[int64]chan *hat.Pixel
+	data     []byte
+	clients  map[int64]chan []byte
 	dataLock *sync.RWMutex
 }
 
 // register new listener. Return the the client id and the current Pixel
-func (st Storage) Register(ch chan *hat.Pixel) (int64, *hat.Pixel) {
+func (st Storage) Register(ch chan []byte) (int64, []byte) {
 	id := idp.getNextID()
 	st.clients[id] = ch
 	log.Println("register new client", id)
@@ -60,40 +60,49 @@ func (st *Storage) Deregister(id int64) {
 func (st *Storage) do(ch <-chan *hat.Pixel) {
 	for data := range ch {
 		st.dataLock.Lock()
-		st.data = data
+		st.data = []byte(data.String())
+		newData := st.data
 		st.dataLock.Unlock()
 		for _, client := range st.clients {
-			client <- data
+			client <- newData
 		}
 	}
 }
 
 func NewStorage(ch <-chan *hat.Pixel) *Storage {
-	st := &Storage{clients: map[int64]chan *hat.Pixel{}, dataLock: &sync.RWMutex{}}
+	st := &Storage{clients: map[int64]chan []byte{}, dataLock: &sync.RWMutex{}}
 
 	go st.do(ch)
 
 	return st
 }
 
+// This request handler opens a websocket to the browser, and then notify the current pixel to the browser each time it
+// changed.
+// When the websocket connection is established, the function register itself as a new storage listener. As result, it
+// receives the current pixel and sends it to the websocket. Then it listen to changes in the pixel and each time it
+// changed, the function updates the websocket
+//
 func (st Storage) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	conn, _ := upgrader.Upgrade(w, r, nil) // error ignored for sake of simplicity
+	if r.Method == http.MethodGet {
+		conn, _ := upgrader.Upgrade(w, r, nil) // error ignored for sake of simplicity
 
-	ch := make(chan *hat.Pixel)
+		ch := make(chan []byte)
 
-	id, px := st.Register(ch)
-	defer st.Deregister(id)
+		id, px := st.Register(ch)
+		defer st.Deregister(id)
 
-	if err := conn.WriteJSON(px); err != nil {
-		log.Println(err)
-		return
-	}
-
-	for px = range ch {
-		if err := conn.WriteJSON(px); err != nil {
+		if err := conn.WriteMessage(websocket.TextMessage, px); err != nil {
 			log.Println(err)
 			return
 		}
 
+		for px = range ch {
+			if err := conn.WriteMessage(websocket.TextMessage, px); err != nil {
+				log.Println(err)
+				return
+			}
+
+		}
 	}
 }

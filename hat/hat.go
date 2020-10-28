@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	dataTemplate = `{"color": "%s", "location": "(%d, %d)"}`
+	dataTemplate = `{"color": "%s", "x": %d, "y": %d}`
 
 	rmask = 0xF800
 	gmask = 0x07E0
@@ -49,7 +49,7 @@ type Hat struct {
 }
 
 func NewHat(ch chan<- *Pixel) *Hat {
-	h := &Hat {
+	h := &Hat{
 		ch: ch,
 	}
 
@@ -125,4 +125,3 @@ func (h *Hat) do() {
 func getColor() color.Color {
 	return color.New(uint8(rand.Intn(255)), uint8(rand.Intn(255)), uint8(rand.Intn(255)))
 }
-
