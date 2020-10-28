@@ -1,4 +1,4 @@
-package main
+package hat
 
 import (
 	"fmt"
@@ -15,6 +15,10 @@ import (
 
 const (
 	dataTemplate = `{"color": "%s", "location": "(%d, %d)"}`
+
+	rmask = 0xF800
+	gmask = 0x07E0
+	bmask = 0x001F
 )
 
 type Pixel struct {
@@ -117,3 +121,8 @@ func (h *Hat) do() {
 		}
 	}
 }
+
+func getColor() color.Color {
+	return color.New(uint8(rand.Intn(255)), uint8(rand.Intn(255)), uint8(rand.Intn(255)))
+}
+

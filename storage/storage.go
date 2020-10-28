@@ -1,10 +1,18 @@
-package main
+package storage
 
 import (
+	"github.com/gorilla/websocket"
 	"log"
 	"net/http"
 	"sync"
+
+	"github.com/nunnatsa/walkinHat/hat"
 )
+
+var upgrader = websocket.Upgrader{
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
+}
 
 // thread safe id provider. Produces an int64 id from a thread safe counter
 type IDProvider struct {
@@ -24,13 +32,13 @@ var idp = &IDProvider{lock: &sync.Mutex{}}
 
 // Storage stores a Pixel. It updates it from an incoming channel, and distributes the change to its listeners.
 type Storage struct {
-	data     *Pixel
-	clients  map[int64]chan *Pixel
+	data     *hat.Pixel
+	clients  map[int64]chan *hat.Pixel
 	dataLock *sync.RWMutex
 }
 
 // register new listener. Return the the client id and the current Pixel
-func (st Storage) Register(ch chan *Pixel) (int64, *Pixel) {
+func (st Storage) Register(ch chan *hat.Pixel) (int64, *hat.Pixel) {
 	id := idp.getNextID()
 	st.clients[id] = ch
 	log.Println("register new client", id)
@@ -49,7 +57,7 @@ func (st *Storage) Deregister(id int64) {
 }
 
 // get updates from the Hat, and distribute it to the listener
-func (st *Storage) do(ch <-chan *Pixel) {
+func (st *Storage) do(ch <-chan *hat.Pixel) {
 	for data := range ch {
 		st.dataLock.Lock()
 		st.data = data
@@ -60,8 +68,8 @@ func (st *Storage) do(ch <-chan *Pixel) {
 	}
 }
 
-func NewStorage(ch <-chan *Pixel) *Storage {
-	st := &Storage{clients: map[int64]chan *Pixel{}, dataLock: &sync.RWMutex{}}
+func NewStorage(ch <-chan *hat.Pixel) *Storage {
+	st := &Storage{clients: map[int64]chan *hat.Pixel{}, dataLock: &sync.RWMutex{}}
 
 	go st.do(ch)
 
@@ -71,7 +79,7 @@ func NewStorage(ch <-chan *Pixel) *Storage {
 func (st Storage) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	conn, _ := upgrader.Upgrade(w, r, nil) // error ignored for sake of simplicity
 
-	ch := make(chan *Pixel)
+	ch := make(chan *hat.Pixel)
 
 	id, px := st.Register(ch)
 	defer st.Deregister(id)

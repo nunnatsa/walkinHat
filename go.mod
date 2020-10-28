@@ -1,6 +1,6 @@
 module github.com/nunnatsa/walkinHat
 
-go 1.11.8
+go 1.11
 
 require (
 	github.com/gorilla/websocket v1.4.2
